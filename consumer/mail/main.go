@@ -8,11 +8,9 @@ import (
 	mail_repository "main/repositories/email"
 )
 
-var events base_consumer.EventSubcribe
-
 func New() {
-	events = base_consumer.New("mail")
-	events.SubcribeEvent("send_mail", sendMailListener)
+	event := base_consumer.New("mail")
+	event.SubcribeEvent(sendMailListener)
 }
 
 func sendMailListener(recieved []byte) {

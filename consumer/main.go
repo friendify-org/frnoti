@@ -7,12 +7,12 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
-type EventSubcribe map[string]chan []byte
+type EventSubcribe chan []byte
 type EventHandler func(data []byte)
 
 func New(queueName string) EventSubcribe {
 
-	events := EventSubcribe{}
+	event := make(EventSubcribe)
 
 	msgs, err := config.RabbitChannel.Consume(
 		queueName,
@@ -28,28 +28,23 @@ func New(queueName string) EventSubcribe {
 		fmt.Printf("err when declare queue: %v\n", err)
 	}
 
-	go events.messageHandler(msgs)
+	go event.messageHandler(msgs)
 
-	return events
+	return event
 }
 
-func (events EventSubcribe) messageHandler(msgs <-chan amqp091.Delivery) {
+func (event EventSubcribe) messageHandler(msgs <-chan amqp091.Delivery) {
 	for d := range msgs {
-		message := d.Headers["message"].(string) // The message recieved <- body
-		if events[message] == nil {
-			fmt.Printf("[Warning] Unsubcribe message: %v\n", message)
-			continue
-		}
-		events[message] <- d.Body
+		event <- d.Body
 	}
 }
 
-func (events EventSubcribe) SubcribeEvent(eventName string, eventHandler EventHandler) {
+func (events EventSubcribe) SubcribeEvent(eventHandler EventHandler) {
 
-	events[eventName] = make(chan []byte)
+	event := make(chan []byte)
 	go func() {
 		for {
-			eventHandler(<-events[eventName])
+			eventHandler(<-event)
 		}
 	}()
 }
