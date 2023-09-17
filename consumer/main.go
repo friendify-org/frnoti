@@ -39,9 +39,8 @@ func (event EventSubcribe) messageHandler(msgs <-chan amqp091.Delivery) {
 	}
 }
 
-func (events EventSubcribe) SubcribeEvent(eventHandler EventHandler) {
+func (event EventSubcribe) SubcribeEvent(eventHandler EventHandler) {
 
-	event := make(chan []byte)
 	go func() {
 		for {
 			eventHandler(<-event)

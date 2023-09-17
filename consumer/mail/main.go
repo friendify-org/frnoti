@@ -21,6 +21,6 @@ func sendMailListener(recieved []byte) {
 		return
 	}
 	if err := mail_repository.SendMailToUser(&data); err != nil {
-		fmt.Printf("Error when send mail is: %v\n", err)
+		fmt.Printf("Error when send mail is: %v %v\n", err, data)
 	}
 }
