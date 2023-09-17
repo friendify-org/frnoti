@@ -10,9 +10,9 @@ type MailConfig struct {
 }
 
 type MailData struct {
-	To      string
-	Subject string
-	Content string
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Content string `json:"content"`
 }
 
 var MailSender MailConfig
@@ -26,14 +26,14 @@ func (mailSender *MailConfig) authentication() {
 	mailSender.auth = auth
 }
 
-func (mailSender *MailConfig) SendMail(data MailData) {
+func (mailSender *MailConfig) SendMail(data MailData) error {
 	to := []string{data.To}
 	msg := []byte("To: " + data.To + "\r\n" +
 		"Subject: " + data.Subject + "\r\n" +
 		"\r\n" +
 		data.Content + "\r\n")
 
-	smtp.SendMail(EnvirontmentVariables.MailHost+":"+EnvirontmentVariables.MailPort, mailSender.auth, EnvirontmentVariables.MailUser, to, msg)
+	return smtp.SendMail(EnvirontmentVariables.MailHost+":"+EnvirontmentVariables.MailPort, mailSender.auth, EnvirontmentVariables.MailUser, to, msg)
 }
 
 func (mailSender *MailConfig) healthCheckMailService() {

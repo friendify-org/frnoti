@@ -146,4 +146,8 @@ var Messages = map[string]Message{
 		Code:        26,
 		Description: "not found channel",
 	},
+	"send_mail_success": {
+		Code:        1000,
+		Description: "send mail success fully",
+	},
 }

@@ -9,7 +9,7 @@ import (
 )
 
 type Repository[Model any] struct {
-	model Model 
+	model Model
 }
 
 func (repository Repository[Model]) CreateOne(record *Model) *gorm.DB {
@@ -25,10 +25,11 @@ func (repository Repository[Model]) FindOne(filter *Model) (Model, error) {
 
 func (respoitory Repository[Model]) FindAll(filter *Model, query dtos.Query) ([]Model, int64) {
 	var records []Model
+	var total int64
 
-	result := config.Db.Model(&filter).Where(&filter).Offset(query.Offset).Limit(query.Limit).Find(&records)
+	config.Db.Debug().Model(&filter).Where(&filter).Offset(query.Offset).Count(&total).Limit(query.Limit | 10).Find(&records)
 
-	return records, result.RowsAffected
+	return records, total
 }
 
 func (repository Repository[Model]) GetAll(filter *Model) []Model {

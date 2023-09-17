@@ -3,10 +3,9 @@ package services
 import (
 	"main/base"
 	"main/config"
-	user_dto "main/dtos/user"
+	"main/dtos"
 	"main/models"
-	"main/repositories"
-	"main/utils"
+	mail_repository "main/repositories/email"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,35 +14,50 @@ type EmailService struct {
 	base.Service[models.Email]
 }
 
-func (emailService EmailService) SendVerifyMail(context *gin.Context) {
-	data := base.GetData[user_dto.SendVerifyMail](context)
-	userService := UserService{}
-	user, err := userService.Repository.FindOne(&models.User{
-		Email: data.Email,
-	})
+func (emailService EmailService) Send(context *gin.Context) {
+	mailData := context.MustGet("data").(models.Email)
 
+	err := mail_repository.SendMailToUser(&mailData)
 	if err != nil {
 		response := config.Response{
-			Data:     config.NoData(),
-			Messages: []config.Message{config.Messages["email_not_registered"]},
+			Data: config.NoData(),
+			Messages: []config.Message{
+				{
+					Description: err.Error(),
+				},
+			},
 		}
+
 		response.BadRequest(context)
+		return
 	}
 
-	emailRepostory := repositories.EmailRepository{}
-
-	userIdString, _ := utils.NumberToString(int(user.ID))
-
-	go emailRepostory.SendMailToUser(&models.Email{
-		SendTo:  userIdString,
-		Subject: "[Friendify] -> Verify account",
-		Content: "Your otp code is: " + user.OtpCode,
-	})
-
 	response := config.Response{
-		Data:     config.NoData(),
-		Messages: []config.Message{},
+		Data: config.ResponseData{
+			Result: mailData,
+		},
+		Messages: []config.Message{
+			config.Messages["send_mail_success"],
+		},
 	}
 
 	response.Created(context)
+}
+
+func (emailService EmailService) GetAll(context *gin.Context) {
+	query := context.MustGet("query").(dtos.Query)
+
+	result, total := emailService.Repository.FindAll(&models.Email{}, query)
+
+	response := config.Response{
+		Data: config.ResponseData{
+			Result: result,
+			Total:  total,
+			Limit:  query.Limit,
+			Offset: query.Offset,
+		},
+		Messages: []config.Message{config.Messages["get_success"]},
+	}
+
+	response.GetSuccess(context)
 }
